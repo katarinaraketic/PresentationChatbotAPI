@@ -2,12 +2,11 @@
 using PresentationChatbotAPI;
 
 var builder = WebApplication.CreateBuilder(args);
-// Dodaj Swagger u DI container
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.OperationFilter<SwaggerFileOperationFilter>(); // Registracija prilagođenog filtera
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Presentation Chatbot API",
@@ -16,13 +15,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-
 // Add services to the container.
 builder.Services.AddSingleton<PresentationService>();
 builder.Services.AddSingleton<ChatbotService>();
-
-//builder.Services.AddScoped<PresentationService>();
-//builder.Services.AddScoped<ChatbotService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
