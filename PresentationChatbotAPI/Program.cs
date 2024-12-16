@@ -1,8 +1,19 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using PresentationChatbotAPI;
+using PresentationChatbotAPI;
+using Microsoft.AspNetCore.Identity.UI;
 
 var builder = WebApplication.CreateBuilder(args);
+// Dodaj DbContext sa konekcijom
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Dodaj Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -13,7 +24,6 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1"
     });
 });
-
 
 // Add services to the container.
 builder.Services.AddSingleton<PresentationService>();
@@ -35,7 +45,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -43,13 +52,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     // Omogući Swagger i Swagger UI
-
-        app.UseSwagger();
+    app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "PresentationChatbotAPI v1");
     });
-
 }
 
 // Aktivacija CORS politike
