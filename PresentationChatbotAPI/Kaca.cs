@@ -1,7 +1,7 @@
 ﻿// File: Models/Kaca.cs
 using Microsoft.AspNetCore.Http;
 
-namespace PresentationChatbotAPI
+namespace LearningSystemAIAPI
 {
     public class Kaca
     {

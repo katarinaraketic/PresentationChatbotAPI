@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace PresentationChatbotAPI.Controllers
+namespace LearningSystemAIAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

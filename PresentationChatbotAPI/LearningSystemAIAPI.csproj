@@ -22,7 +22,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="LearningSystemAIAPI" />
+    <Using Include="Microsoft.AspNetCore.Identity" />
     <Using Include="Microsoft.AspNetCore.Mvc" />
+    <Using Include="Microsoft.EntityFrameworkCore" />
+    <Using Include="Microsoft.ML" />
+    <Using Include="Microsoft.ML.Data" />
+    <Using Include="Microsoft.OpenApi.Models" />
+    <Using Include="System.Text" />
+    <Using Include="UglyToad.PdfPig" />
   </ItemGroup>
 
 </Project>

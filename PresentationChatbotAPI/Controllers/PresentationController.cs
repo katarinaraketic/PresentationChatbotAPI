@@ -1,7 +1,9 @@
-﻿namespace PresentationChatbotAPI.Controllers;
+﻿using LearningSystemAIAPI;
+
+namespace LearningSystemAIAPI.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class PresentationController(PresentationService presentationService, ChatbotService chatbotService) : ControllerBase
+public class PresentationController(PdfHelper presentationService, ChatbotService chatbotService) : ControllerBase
 {
     [HttpPost("process-all")]
     public async Task<IActionResult> ProcessAndTrainModel([FromForm] Kaca kaca, [FromQuery] string fileUrl)
