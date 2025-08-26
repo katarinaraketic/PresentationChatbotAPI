@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LearningSystemAIAPI", "PresentationChatbotAPI\LearningSystemAIAPI.csproj", "{3FAFD162-A013-45A9-8896-8741E20228D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LearningSystemAPI", "PresentationChatbotAPI\LearningSystemAPI.csproj", "{3FAFD162-A013-45A9-8896-8741E20228D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,12 +1,14 @@
-﻿namespace LearningSystemAIAPI;
+﻿namespace LearningSystemAPI;
 
 public class PdfHelper
 {
     public string ExtractTextFromPdf(string filePath)
     {
-        StringBuilder extractedText = new();
+        var extractedText = new StringBuilder();
 
-        using (PdfDocument? document = PdfDocument.Open(filePath))
+        using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+
+        using (PdfDocument document = PdfDocument.Open(fs))
         {
             foreach (var page in document.GetPages())
             {
@@ -14,6 +16,18 @@ public class PdfHelper
             }
         }
 
-        return extractedText.ToString();
+        string text = extractedText.ToString();
+
+        var headers = new[] { "Bezbednost", "Mreže", "Segmentacija", "VPN", "Wireshark", "Pristup", "Skeniranje" };
+        foreach (var header in headers)
+        {
+            text = Regex.Replace(text, @"(?<!\n)" + Regex.Escape(header), "\n" + header);
+            text = Regex.Replace(text, Regex.Escape(header) + @"(?!\n)", header + "\n");
+        }
+
+        text = Regex.Replace(text, @"(?<=\.)\s+", ".\n");
+        text = Regex.Replace(text, @"(\b[A-Z][a-zA-Z\sčćžšđ]+)\s*(\d+)(?=[A-Z])", "$1 $2\n");
+
+        return text;
     }
 }
