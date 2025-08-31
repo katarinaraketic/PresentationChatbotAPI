@@ -46,7 +46,6 @@
     <Using Include="Microsoft.IdentityModel.Tokens" />
     <Using Include="Microsoft.ML" />
     <Using Include="Microsoft.ML.Data" />
-    <Using Include="Microsoft.OpenApi.Models" />
     <Using Include="Newtonsoft.Json" />
     <Using Include="Newtonsoft.Json.Serialization" />
     <Using Include="System.IdentityModel.Tokens.Jwt" />
@@ -64,18 +63,6 @@
 
   <ItemGroup>
     <None Update="Data\Quotes.csv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="MLData\qa_data.csv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="MLData\summarization_data.csv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Presentations\BRM24_01_M.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Presentations\sample_quiz.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

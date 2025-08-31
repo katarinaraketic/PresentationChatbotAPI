@@ -17,8 +17,17 @@ public class PdfHelper
         }
 
         string text = extractedText.ToString();
+        // Niz naslova (isti redosled kao u tekstu iznad)
+        string[] headers = new[]
+        {
+    "ITS – Visoka škola strukovnih studija za informacione tehnologije (Beograd)",
+    "Studijski programi – osnovne strukovne studije",
+    "Master strukovne studije",
+    "Akreditacija i kvalitet",
+    "Upis, cene i studentski resursi"
+};
 
-        var headers = new[] { "Bezbednost", "Mreže", "Segmentacija", "VPN", "Wireshark", "Pristup", "Skeniranje" };
+
         foreach (var header in headers)
         {
             text = Regex.Replace(text, @"(?<!\n)" + Regex.Escape(header), "\n" + header);

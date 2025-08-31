@@ -1,4 +1,6 @@
-﻿WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
+﻿using Microsoft.OpenApi.Models;
+
+WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options
                 .UseSqlServer(builder.Configuration
@@ -30,7 +32,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddSingleton<MLService>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -40,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
 
 });
 
-builder.Services.AddSingleton<MLService>();
+
 
 builder.Services.AddSingleton<PdfHelper>();
 

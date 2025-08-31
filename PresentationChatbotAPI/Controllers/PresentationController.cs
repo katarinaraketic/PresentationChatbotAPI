@@ -1,7 +1,17 @@
-﻿namespace LearningSystemAPI.Controllers;
+﻿// Ako ti ipak treba OpenXML negde drugde, ališuj ga ovako:
+using OoxmlPresentation = DocumentFormat.OpenXml.Presentation.Presentation;
+
+// Alias za EF entitet iz DatabaseFirst namespace-a:
+using DbPres = LearningSystemAPI.DatabaseFirst.Presentations;
+
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+
+namespace LearningSystemAPI.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class PresentationController(PdfHelper presentationService, ChatbotService chatbotService, MLService mlService, AppDbContext appDbContext) : ControllerBase
+public class PresentationController(PdfHelper presentationService, ChatbotService chatbotService, AppDbContext appDbContext) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<PresentationDto>>> GetAll()
@@ -109,21 +119,8 @@ public class PresentationController(PdfHelper presentationService, ChatbotServic
         return Ok(new { Answer = answer });
     }
 
-    [HttpGet("summarize")]
-    public IActionResult Summarize([FromQuery] int index)
-    {
-        var text = LoadPresentationText(index);
-        var summary = mlService.Summarize(text);
-        return Ok(new { Text = summary });
-    }
 
-    [HttpPost("askAdvanced")]
-    public IActionResult AskAdvanced([FromBody] AskRequest req)
-    {
-        var context = LoadPresentationText(req.Index);
-        var answer = mlService.Answer(context, req.Question);
-        return Ok(new { Answer = answer });
-    }
+ 
 
     private string LoadPresentationText(int index)
     {
@@ -139,34 +136,104 @@ public class PresentationController(PdfHelper presentationService, ChatbotServic
         public string Question { get; set; }
     }
 
-    [HttpPost("bulk-upload")]
-    [Consumes("multipart/form-data")]
-    public async Task<ActionResult> BulkUpload([FromForm] IFormFile[] files)
+    // ---- BULK UPLOAD ----
+    public sealed class BulkPresentationUploadForm
     {
-        if (files == null || files.Length == 0)
-            return BadRequest("Morate uploadovati bar jedan fajl.");
+        [Required]
+        public Guid SubjectId { get; set; }
 
-        var uploadedIds = new List<Guid>();
-        foreach (var file in files)
+        /// <summary>
+        /// Opcioni label za sve fajlove; ako nije zadat, koristi se naziv fajla bez ekstenzije.
+        /// </summary>
+        public string? Label { get; set; }
+
+        [Required]
+        public List<IFormFile> Files { get; set; } = new();
+    }
+
+    public sealed class BulkUploadResult
+    {
+        public int Inserted { get; set; }
+        public int Skipped { get; set; }
+        public List<Guid> CreatedIds { get; set; } = new();
+        public List<string> Messages { get; set; } = new();
+    }
+
+    [HttpPost("bulk")]
+    [Consumes("multipart/form-data")]
+    [DisableRequestSizeLimit] // dozvoli veće PDF-ove
+    [RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue)]
+    public async Task<ActionResult<BulkUploadResult>> BulkUpload(
+        [FromForm] BulkPresentationUploadForm form,
+        [FromQuery] bool skipDuplicates = true,           // ako postoji fajl sa istim imenom za isti subject, preskače se
+        CancellationToken ct = default)
+    {
+        if (form.Files == null || form.Files.Count == 0)
+            return BadRequest("Nema poslatih fajlova.");
+
+        var toInsert = new List<Presentations>(form.Files.Count);
+        var result = new BulkUploadResult();
+
+        // Opciona transakcija – ili sve ili ništa
+        await using var trx = await appDbContext.Database.BeginTransactionAsync(ct);
+
+        foreach (var file in form.Files)
         {
-            if (file.Length == 0) continue;
-            using var ms = new MemoryStream();
-            await file.CopyToAsync(ms);
+            if (file.Length <= 0)
+            {
+                result.Skipped++;
+                result.Messages.Add($"{file.FileName}: prazan fajl.");
+                continue;
+            }
 
-            Presentations pres = new Presentations
+            // Duplikati po (SubjectId, FileName)
+            if (skipDuplicates)
+            {
+                var exists = await appDbContext.Presentations
+                    .AnyAsync(p => p.SubjectId == form.SubjectId && p.FileName == file.FileName, ct);
+
+                if (exists)
+                {
+                    result.Skipped++;
+                    result.Messages.Add($"{file.FileName}: već postoji, preskačem.");
+                    continue;
+                }
+            }
+
+            await using var ms = new MemoryStream();
+            await file.CopyToAsync(ms, ct);
+
+            var entity = new Presentations
             {
                 Id = Guid.NewGuid(),
-                Label = Path.GetFileNameWithoutExtension(file.FileName),
-                FileName = file.FileName,
-                ContentType = file.ContentType ?? "application/octet-stream",
+                Label = string.IsNullOrWhiteSpace(form.Label)
+                                ? Path.GetFileNameWithoutExtension(file.FileName)
+                                : form.Label,
+                Summary = null,
                 FileData = ms.ToArray(),
-                Summary = ""
+                FileName = file.FileName,
+                ContentType = string.IsNullOrWhiteSpace(file.ContentType)
+                                ? "application/octet-stream"
+                                : file.ContentType,
+                SubjectId = form.SubjectId
             };
-            appDbContext.Presentations.Add(pres);
-            uploadedIds.Add(pres.Id);
+
+            toInsert.Add(entity);
         }
 
-        await appDbContext.SaveChangesAsync();
-        return Ok(new { Count = uploadedIds.Count, Ids = uploadedIds });
+        if (toInsert.Count == 0)
+        {
+            await trx.RollbackAsync(ct);
+            return Ok(result); // sve je preskočeno
+        }
+
+        await appDbContext.Presentations.AddRangeAsync(toInsert, ct);
+        await appDbContext.SaveChangesAsync(ct);
+        await trx.CommitAsync(ct);
+
+        result.Inserted = toInsert.Count;
+        result.CreatedIds = toInsert.Select(e => e.Id).ToList();
+
+        return CreatedAtAction(nameof(GetAll), null, result);
     }
 }
